@@ -21,7 +21,7 @@ export interface LeaderboardEntry {
 export interface UserActivity {
   id: string;
   wallet_address: string;
-  activity_type: 'bet' | 'claim' | 'daily_claim' | 'quiz' | 'deposit' | 'withdraw';
+  activity_type: 'bet' | 'claim' | 'daily_claim' | 'quiz' | 'deposit' | 'withdraw' | 'resolve_market';
   description: string;
   amount?: number;
   market_id?: number;
