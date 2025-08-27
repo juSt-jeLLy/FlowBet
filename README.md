@@ -4,6 +4,12 @@
 
 Create markets, place epic bets, earn daily rewards, solve mind-bending puzzles, and dominate the leaderboards. This isn't just betting—it's **financial gaming warfare**.
 
+## 🔗 **Live Contract on Flow EVM Testnet**
+
+🔴 **View real-time transactions:** https://evm-testnet.flowscan.io/address/0x2D8C5F975394AC57Db7810bb09f58e39099c74a5?tab=txs
+
+📍 **Contract Address:** `0x2D8C5F975394AC57Db7810bb09f58e39099c74a5`
+
 ---
 
 ## 🚀 **What Makes FlowBet Legendary?**
@@ -125,6 +131,7 @@ VITE_DEBUG_MODE=development
 🆔 Chain ID: 545
 🔗 RPC Endpoint: https://testnet.evm.nodes.onflow.org
 🔍 Block Explorer: https://evm-testnet.flowscan.io
+🔗 View Contract Transactions: https://evm-testnet.flowscan.io/address/0x2D8C5F975394AC57Db7810bb09f58e39099c74a5?tab=txs
 ```
 
 ### **5. 🚀 Installation & Launch Sequence**
