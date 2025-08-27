@@ -19,7 +19,8 @@ import {
   Calendar,
   Activity,
   Coins,
-  Gamepad2
+  Gamepad2,
+  Trophy
 } from "lucide-react";
 import marketCrypto from "@/assets/market-crypto.jpg";
 import marketSports from "@/assets/market-sports.jpg";
@@ -31,7 +32,7 @@ import type { Market } from "@/hooks/useContract";
 
 export function Markets() {
   const { isConnected } = useWeb3();
-  const { getMarkets, placeBet, getPayoutQuote, loading } = useContract();
+  const { getMarkets, placeBet, getPayoutQuote, claimWinnings, loading } = useContract();
   const { playSound } = useSound();
   
   const [markets, setMarkets] = useState<Market[]>([]);
@@ -56,7 +57,7 @@ export function Markets() {
   }, [markets, searchTerm, filter]);
 
   useEffect(() => {
-    if (selectedMarket && betAmount) {
+    if (selectedMarket && betAmount && !selectedMarket.isResolved) {
       updatePayoutQuote();
     }
   }, [selectedMarket, betAmount, selectedOutcome]);
@@ -78,6 +79,9 @@ export function Markets() {
 
     // Apply category filter
     switch (filter) {
+      case "all":
+        filtered = filtered.filter(market => !market.isResolved);
+        break;
       case "active":
         filtered = filtered.filter(market => !market.isResolved);
         break;
@@ -102,7 +106,7 @@ export function Markets() {
     }
 
     try {
-      const quote = await getPayoutQuote(selectedMarket.id, selectedOutcome, betAmount);
+      const quote = await getPayoutQuote(Number(selectedMarket.id), selectedOutcome, betAmount);
       setPayoutQuote(quote);
     } catch (error) {
       console.error('Error getting payout quote:', error);
@@ -114,10 +118,16 @@ export function Markets() {
     if (!selectedMarket || !betAmount || parseFloat(betAmount) <= 0) return;
     
     playSound('bet');
-    await placeBet(selectedMarket.id, selectedOutcome, betAmount);
+    await placeBet(Number(selectedMarket.id), selectedOutcome, betAmount);
     setBetAmount("");
     setSelectedMarket(null);
     setPayoutQuote("0");
+    await loadMarkets();
+  };
+
+  const handleClaimWinnings = async (marketId: string) => {
+    playSound('win');
+    await claimWinnings(Number(marketId));
     await loadMarkets();
   };
 
@@ -206,7 +216,7 @@ export function Markets() {
             filter: 'drop-shadow(0 0 10px rgba(0, 255, 255, 0.5))'
           }}
         >
-          🎯 Prediction Markets
+          Prediction Markets
         </h1>
         <p className="text-muted-foreground">
           Bet on the future with real money. Your knowledge = your profit.
@@ -228,7 +238,7 @@ export function Markets() {
         <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="hot">🔥 Hot</TabsTrigger>
+            <TabsTrigger value="hot">Hot</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="resolved">Resolved</TabsTrigger>
           </TabsList>
@@ -282,9 +292,9 @@ export function Markets() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <CardTitle className="text-base leading-tight">{market.question}</CardTitle>
-                            {isHotMarket(market) && (
+                            {isHotMarket(market) && !market.isResolved && (
                               <Badge className="bg-neon-orange/20 text-neon-orange border-neon-orange/50 text-xs animate-pulse">
-                                🔥 HOT
+                                HOT
                               </Badge>
                             )}
                           </div>
@@ -326,13 +336,16 @@ export function Markets() {
                       {/* Odds Display - Compact */}
                       <div className="grid grid-cols-2 gap-2">
                         <motion.div 
-                          className={`p-2 rounded-lg border transition-all cursor-pointer ${
-                            selectedMarket?.id === market.id && selectedOutcome === 1
+                          className={`p-2 rounded-lg border transition-all ${
+                            !market.isResolved ? 'cursor-pointer' : 'cursor-default'
+                          } ${
+                            selectedMarket?.id === market.id && selectedOutcome === 1 && !market.isResolved
                               ? 'border-neon-green bg-neon-green/20 shadow-glow-green'
                               : 'border-neon-green/30 bg-neon-green/5 hover:bg-neon-green/10'
                           }`}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={!market.isResolved ? { scale: 1.02 } : {}}
+                          whileTap={!market.isResolved ? { scale: 0.98 } : {}}
+                          onClick={() => !market.isResolved && setSelectedMarket(market)}
                         >
                           <div className="text-center">
                             <div className="text-lg font-bold text-neon-green">YES</div>
@@ -346,13 +359,16 @@ export function Markets() {
                         </motion.div>
 
                         <motion.div 
-                          className={`p-2 rounded-lg border transition-all cursor-pointer ${
-                            selectedMarket?.id === market.id && selectedOutcome === 0
+                          className={`p-2 rounded-lg border transition-all ${
+                            !market.isResolved ? 'cursor-pointer' : 'cursor-default'
+                          } ${
+                            selectedMarket?.id === market.id && selectedOutcome === 0 && !market.isResolved
                               ? 'border-red-400 bg-red-400/20 shadow-glow-pink'
                               : 'border-red-400/30 bg-red-400/5 hover:bg-red-400/10'
                           }`}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={!market.isResolved ? { scale: 1.02 } : {}}
+                          whileTap={!market.isResolved ? { scale: 0.98 } : {}}
+                          onClick={() => !market.isResolved && setSelectedMarket(market)}
                         >
                           <div className="text-center">
                             <div className="text-lg font-bold text-red-400">NO</div>
@@ -367,7 +383,18 @@ export function Markets() {
                       </div>
 
                       {/* Action Buttons */}
-                      {!market.isResolved && (
+                      {market.isResolved ? (
+                        <Button
+                          onClick={() => handleClaimWinnings(String(market.id))}
+                          variant="hero"
+                          size="sm"
+                          className="w-full"
+                          disabled={loading}
+                        >
+                          <Trophy className="w-3 h-3 mr-1" />
+                          Claim Winnings
+                        </Button>
+                      ) : (
                         <div className="flex gap-2">
                           <Button
                             onClick={() => {
@@ -406,8 +433,8 @@ export function Markets() {
         )}
       </div>
 
-      {/* Bet Modal */}
-      {selectedMarket && (
+      {/* Bet Modal - Only for active markets */}
+      {selectedMarket && !selectedMarket.isResolved && (
         <motion.div
           className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
           initial={{ opacity: 0 }}
@@ -438,7 +465,7 @@ export function Markets() {
                 <div className={`text-lg font-bold ${
                   selectedOutcome === 1 ? 'text-neon-green' : 'text-red-400'
                 }`}>
-                  {selectedOutcome === 1 ? '✅ YES' : '❌ NO'}
+                  {selectedOutcome === 1 ? 'YES' : 'NO'}
                 </div>
               </div>
 

@@ -39,7 +39,6 @@ const Dashboard = () => {
     withdraw,
     placeBet,
     createMarket,
-    claimWinnings,
     resolveMarket,
     loading 
   } = useContract();
@@ -96,7 +95,7 @@ const Dashboard = () => {
 
   const handlePlaceBet = async () => {
     if (!selectedMarket || !betAmount || parseFloat(betAmount) <= 0) return;
-    await placeBet(selectedMarket.id, selectedOutcome, betAmount);
+    await placeBet(Number(selectedMarket.id), selectedOutcome, betAmount);
     setBetAmount("");
     setSelectedMarket(null);
     await loadData();
@@ -116,6 +115,9 @@ const Dashboard = () => {
   };
 
   const isOwner = account?.toLowerCase() === OWNER_ADDRESS.toLowerCase();
+
+  // Filter out resolved markets from dashboard display
+  const activeMarkets = markets.filter(m => !m.isResolved);
 
   if (!isConnected) {
     return (
@@ -203,10 +205,8 @@ const Dashboard = () => {
           <ConnectWallet />
         </div>
 
-       
-
-        {/* Recent Hot Markets */}
-        {markets.length > 0 && (
+        {/* Recent Hot Markets - Only show active markets */}
+        {activeMarkets.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -216,8 +216,7 @@ const Dashboard = () => {
               🔥 Trending Markets
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
-              {markets
-                .filter(m => !m.isResolved)
+              {activeMarkets
                 .sort((a, b) => Number(b.totalPool) - Number(a.totalPool))
                 .slice(0, 4)
                 .map((market, i) => (
@@ -313,28 +312,29 @@ const Dashboard = () => {
             {isOwner && <TabsTrigger value="admin">Admin</TabsTrigger>}
           </TabsList>
 
-          {/* Markets Tab */}
+          {/* Markets Tab - Only show active markets */}
           <TabsContent value="markets" className="space-y-4">
             <div className="grid gap-4">
-              {markets.length === 0 ? (
+              {activeMarkets.length === 0 ? (
                 <Card className="neon-border bg-dark-card">
                   <CardContent className="p-8 text-center">
                     <Target className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">No markets available yet</p>
+                    <p className="text-muted-foreground">No active markets available</p>
                     {isOwner && <p className="text-sm text-neon-cyan mt-2">Create the first market in the Admin tab!</p>}
+                    <p className="text-sm text-neon-pink mt-2">
+                      <Link to="/markets" className="underline hover:text-neon-cyan transition-colors">
+                        Visit Markets page to see resolved markets
+                      </Link>
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
-                markets.map((market) => (
+                activeMarkets.map((market) => (
                   <Card key={market.id} className="neon-border bg-dark-card">
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-lg">{market.question}</CardTitle>
-                        {market.isResolved ? (
-                          <Badge variant="secondary">Resolved</Badge>
-                        ) : (
-                          <Badge className="bg-neon-green/20 text-neon-green">Active</Badge>
-                        )}
+                        <Badge className="bg-neon-green/20 text-neon-green">Active</Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -353,34 +353,22 @@ const Dashboard = () => {
                         </div>
                       </div>
                       
-                      {!market.isResolved && (
-                        <div className="flex gap-2">
-                          <Button 
-                            onClick={() => { setSelectedMarket(market); setSelectedOutcome(1); }}
-                            variant="secondary"
-                            className="flex-1"
-                          >
-                            Bet YES
-                          </Button>
-                          <Button 
-                            onClick={() => { setSelectedMarket(market); setSelectedOutcome(0); }}
-                            variant="secondary"
-                            className="flex-1"
-                          >
-                            Bet NO
-                          </Button>
-                        </div>
-                      )}
-
-                      {market.isResolved && (
+                      <div className="flex gap-2">
                         <Button 
-                          onClick={() => claimWinnings(market.id)}
-                          variant="hero"
-                          className="w-full"
+                          onClick={() => { setSelectedMarket(market); setSelectedOutcome(1); }}
+                          variant="secondary"
+                          className="flex-1"
                         >
-                          Claim Winnings
+                          Bet YES
                         </Button>
-                      )}
+                        <Button 
+                          onClick={() => { setSelectedMarket(market); setSelectedOutcome(0); }}
+                          variant="secondary"
+                          className="flex-1"
+                        >
+                          Bet NO
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))
@@ -570,42 +558,40 @@ const Dashboard = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {markets
-                      .filter(market => !market.isResolved) // Removed time constraint
-                      .map((market) => (
-                        <div key={market.id} className="p-4 bg-dark-bg rounded-lg space-y-2">
-                          <div className="flex justify-between items-start gap-4">
-                            <div>
-                              <h4 className="font-medium text-sm">{market.question}</h4>
-                              <p className="text-xs text-muted-foreground">
-                                Created: {new Date(market.createdAt * 1000).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <Badge variant="secondary">Pending Resolution</Badge>
+                    {activeMarkets.map((market) => (
+                      <div key={market.id} className="p-4 bg-dark-bg rounded-lg space-y-2">
+                        <div className="flex justify-between items-start gap-4">
+                          <div>
+                            <h4 className="font-medium text-sm">{market.question}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              Created: {new Date(market.createdAt * 1000).toLocaleDateString()}
+                            </p>
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => resolveMarket(market.id, 1)}
-                              disabled={loading}
-                              className="w-full"
-                            >
-                              Resolve YES
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => resolveMarket(market.id, 0)}
-                              disabled={loading}
-                              className="w-full"
-                            >
-                              Resolve NO
-                            </Button>
-                          </div>
+                          <Badge variant="secondary">Pending Resolution</Badge>
                         </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => resolveMarket(market.id, 1)}
+                            disabled={loading}
+                            className="w-full"
+                          >
+                            Resolve YES
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => resolveMarket(market.id, 0)}
+                            disabled={loading}
+                            className="w-full"
+                          >
+                            Resolve NO
+                          </Button>
+                        </div>
+                      </div>
                     ))}
-                    {markets.filter(market => !market.isResolved).length === 0 && (
+                    {activeMarkets.length === 0 && (
                       <div className="text-center text-muted-foreground p-4">
                         No active markets to resolve
                       </div>
