@@ -571,14 +571,14 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {markets
-                      .filter(market => !market.isResolved && Date.now() / 1000 > market.resolveTime)
+                      .filter(market => !market.isResolved) // Removed time constraint
                       .map((market) => (
                         <div key={market.id} className="p-4 bg-dark-bg rounded-lg space-y-2">
                           <div className="flex justify-between items-start gap-4">
                             <div>
                               <h4 className="font-medium text-sm">{market.question}</h4>
                               <p className="text-xs text-muted-foreground">
-                                Resolve Time: {new Date(market.resolveTime * 1000).toLocaleDateString()}
+                                Created: {new Date(market.createdAt * 1000).toLocaleDateString()}
                               </p>
                             </div>
                             <Badge variant="secondary">Pending Resolution</Badge>
@@ -605,9 +605,9 @@ const Dashboard = () => {
                           </div>
                         </div>
                     ))}
-                    {markets.filter(market => !market.isResolved && Date.now() / 1000 > market.resolveTime).length === 0 && (
+                    {markets.filter(market => !market.isResolved).length === 0 && (
                       <div className="text-center text-muted-foreground p-4">
-                        No markets pending resolution
+                        No active markets to resolve
                       </div>
                     )}
                   </CardContent>
