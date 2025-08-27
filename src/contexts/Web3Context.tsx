@@ -1,7 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, FLOW_TESTNET } from '@/lib/contract';
 import { toast } from '@/hooks/use-toast';
+import { throttle } from '@/lib/utils/debounce';
+
+// Create a shared Alchemy provider for read operations
+const ALCHEMY_URL = 'https://flow-testnet.g.alchemy.com/v2/UqKqNAsvnMX2rMo6KIJHi';
+const readProvider = new ethers.JsonRpcProvider(ALCHEMY_URL);
 
 interface Web3ContextType {
   account: string | null;
@@ -15,7 +20,7 @@ interface Web3ContextType {
   disconnectWallet: () => void;
   switchNetwork: () => Promise<void>;
   isCorrectNetwork: boolean;
-  refreshBalances: () => Promise<void>;
+  refreshBalances: () => void;
 }
 
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
@@ -39,9 +44,20 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     if (!window.ethereum) return false;
     
     try {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      const isCorrect = chainId === FLOW_TESTNET.chainId;
+      const [walletChainId, networkChainId] = await Promise.all([
+        window.ethereum.request({ method: 'eth_chainId' }),
+        readProvider.send('eth_chainId', [])
+      ]);
+
+      const isCorrect = walletChainId === FLOW_TESTNET.chainId;
       setIsCorrectNetwork(isCorrect);
+
+      // Verify that our Alchemy provider is on the correct network
+      if (networkChainId !== FLOW_TESTNET.chainId) {
+        console.error('Alchemy provider is on wrong network');
+        return false;
+      }
+
       return isCorrect;
     } catch (error) {
       console.error('Error checking network:', error);
@@ -88,21 +104,32 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshBalances = async () => {
-    if (!provider || !account || !contract) return;
+  const refreshBalancesImpl = async () => {
+    if (!account) return;
 
     try {
-      // Get FLOW balance
-      const flowBalance = await provider.getBalance(account);
-      setFlowBalance(ethers.formatEther(flowBalance));
+      // Create a read-only contract instance
+      const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, readProvider);
 
-      // Get PREDICT balance
-      const predictBalance = await contract.balanceOf(account);
+      // Get both balances in parallel using the Alchemy provider
+      const [flowBalance, predictBalance] = await Promise.all([
+        readProvider.getBalance(account),
+        readOnlyContract.balanceOf(account)
+      ]);
+
+      setFlowBalance(ethers.formatEther(flowBalance));
       setPredictBalance(ethers.formatEther(predictBalance));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching balances:', error);
+      // Don't show errors for balance updates to avoid spamming the user
     }
   };
+
+  // Throttle the balance refresh to prevent too many calls
+  const refreshBalances = useCallback(
+    throttle(refreshBalancesImpl, 5000), // Only allow refresh every 5 seconds
+    [provider, account, contract]
+  );
 
   const connectWallet = async () => {
     if (!window.ethereum) {
@@ -207,10 +234,16 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     }
   }, [account, provider, contract]);
 
-  // Refresh balances when account or contract changes
+  // Refresh balances periodically and when dependencies change
   useEffect(() => {
     if (account && contract && provider) {
+      // Initial load
       refreshBalances();
+
+      // Set up periodic refresh
+      const interval = setInterval(refreshBalances, 10000); // Refresh every 10 seconds
+
+      return () => clearInterval(interval);
     }
   }, [account, contract, provider]);
 

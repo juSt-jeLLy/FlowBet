@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { ethers } from "ethers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,16 +41,26 @@ interface Achievement {
 
 export function Rewards() {
   const { isConnected, account } = useWeb3();
-  const { getUserStats, canClaimDaily, claimDaily, answerQuiz, loading } = useContract();
+  const { getUserStats, canClaimDaily, claimDaily, answerQuiz, loading, contract, getQuiz } = useContract();
   const { playSound } = useSound();
   
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [canClaim, setCanClaim] = useState(false);
   const [quizAnswer, setQuizAnswer] = useState("");
+  const [hasAnsweredCurrentQuiz, setHasAnsweredCurrentQuiz] = useState(false);
+  const [currentQuiz, setCurrentQuiz] = useState<{
+    id: number;
+    question: string;
+    reward: string; // Changed to string for display
+    deadline: number;
+    active: boolean;
+    answerHash: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isConnected && account) {
       loadUserData();
+      loadCurrentQuiz();
     }
   }, [isConnected, account]);
 
@@ -63,10 +74,95 @@ export function Rewards() {
     setCanClaim(claimStatus);
   };
 
+  const checkIfAnswered = async (quizId: number) => {
+    try {
+      if (!contract || !account) return false;
+      
+      // Check if user has already answered this quiz
+      // This assumes your contract has a method to check if user answered a specific quiz
+      // You may need to adjust this based on your contract's actual method name
+      const hasAnswered = await contract.hasAnsweredQuiz(account, quizId);
+      return hasAnswered;
+    } catch (error) {
+      console.error("Error checking if quiz answered:", error);
+      // If we can't check, assume they haven't answered to be safe
+      return false;
+    }
+  };
+
+  const loadCurrentQuiz = async () => {
+    try {
+      if (!contract) return;
+
+      const totalQuizzes = await contract.quizCounter();
+      console.log("Total quizzes:", totalQuizzes.toString());
+
+      // Convert BigInt to number for iteration
+      const totalQuizzesNum = Number(totalQuizzes);
+      
+      if (totalQuizzesNum > 0) {
+        // Check the last few quizzes to find an active one
+        for (let i = totalQuizzesNum - 1; i >= Math.max(0, totalQuizzesNum - 5); i--) {
+          try {
+            console.log("Checking quiz:", i);
+            const quiz = await getQuiz(i);
+            console.log("Quiz data:", quiz);
+            
+            if (quiz && quiz.active) {
+              // Ensure proper type conversion for deadline comparison
+              const currentTime = Math.floor(Date.now() / 1000);
+              const quizDeadline = Number(quiz.deadline);
+              
+              if (quizDeadline > currentTime) {
+                // Check if user has already answered this quiz
+                const hasAnswered = await checkIfAnswered(i);
+                
+                setCurrentQuiz({
+                  id: i,
+                  question: quiz.question,
+                  reward: ethers.formatEther(quiz.reward.toString()), // Convert BigInt to formatted string
+                  deadline: quizDeadline,
+                  active: quiz.active,
+                  answerHash: quiz.answerHash
+                });
+                
+                setHasAnsweredCurrentQuiz(hasAnswered);
+                console.log("Found active quiz:", i, "Already answered:", hasAnswered);
+                break;
+              }
+            }
+          } catch (err) {
+            console.error(`Error checking quiz ${i}:`, err);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading quiz:", error);
+    }
+  };
+
   const handleClaimDaily = async () => {
     playSound('claim');
     await claimDaily();
     await loadUserData();
+  };
+
+  const handleQuizAnswer = async () => {
+    if (currentQuiz?.id !== undefined && quizAnswer.trim()) {
+      try {
+        playSound('click');
+        await answerQuiz(currentQuiz.id, quizAnswer.trim());
+        setQuizAnswer("");
+        setHasAnsweredCurrentQuiz(true); // Mark as answered
+        await loadUserData();
+        
+        // Show success feedback
+        playSound('claim'); // Play success sound
+      } catch (error) {
+        console.error("Error submitting quiz answer:", error);
+        // You might want to show an error message here
+      }
+    }
   };
 
   const getStreakMultiplier = (streak: number): number => {
@@ -323,45 +419,71 @@ export function Rewards() {
                 <div className="absolute inset-0 bg-neon-purple/10 rounded-xl blur-md"></div>
                 <div className="relative p-6 bg-dark-card/80 border-2 border-neon-purple/60 rounded-xl spin-border">
                   <h3 className="text-xl font-bold text-neon-pink mb-4 text-flash">🔥 TODAY'S CHALLENGE:</h3>
-                  <p className="text-lg text-foreground mb-6 leading-relaxed">
-                    "What cryptocurrency was the first to implement smart contracts on a blockchain?"
-                  </p>
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="DROP YOUR ANSWER... 🎯"
-                      value={quizAnswer}
-                      onChange={(e) => setQuizAnswer(e.target.value)}
-                      className="text-lg py-3 bg-dark-bg border-2 border-neon-cyan/40 text-neon-cyan placeholder:text-neon-cyan/60 focus:border-neon-cyan focus:shadow-glow-cyan"
-                    />
-                    <Button 
-                      variant="matrix" 
-                      disabled={!quizAnswer.trim() || loading}
-                      onClick={async () => {
-                        playSound('click');
-                        await answerQuiz(0, quizAnswer.trim());
-                        setQuizAnswer("");
-                        await loadUserData();
-                      }}
-                      className="w-full text-xl py-4"
-                    >
-                      {loading ? (
-                        <>
-                          <Brain className="w-6 h-6 mr-3 animate-spin" />
-                          PROCESSING...
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-6 h-6 mr-3" />
-                          SUBMIT ANSWER! ⚡
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <div className="text-center mt-4 p-3 bg-neon-purple/10 rounded-lg border border-neon-purple/30">
-                    <div className="text-lg font-bold text-neon-yellow">
-                      💎 REWARD: 150 PREDICT TOKENS
+                  {currentQuiz ? (
+                    <>
+                      <p className="text-lg text-foreground mb-6 leading-relaxed">
+                        {currentQuiz.question}
+                      </p>
+                      <div className="space-y-4">
+                        <Input
+                          placeholder={hasAnsweredCurrentQuiz ? "YOU ALREADY ANSWERED THIS QUIZ! 🎯" : "DROP YOUR ANSWER... 🎯"}
+                          value={quizAnswer}
+                          onChange={(e) => setQuizAnswer(e.target.value)}
+                          disabled={hasAnsweredCurrentQuiz}
+                          className={`text-lg py-3 bg-dark-bg border-2 text-neon-cyan placeholder:text-neon-cyan/60 focus:shadow-glow-cyan ${
+                            hasAnsweredCurrentQuiz 
+                              ? 'border-muted opacity-50 cursor-not-allowed' 
+                              : 'border-neon-cyan/40 focus:border-neon-cyan'
+                          }`}
+                        />
+                        <Button 
+                          variant={hasAnsweredCurrentQuiz ? "secondary" : "matrix"}
+                          disabled={hasAnsweredCurrentQuiz || !quizAnswer.trim() || loading}
+                          onClick={handleQuizAnswer}
+                          className="w-full text-xl py-4"
+                        >
+                          {loading ? (
+                            <>
+                              <Brain className="w-6 h-6 mr-3 animate-spin" />
+                              PROCESSING...
+                            </>
+                          ) : hasAnsweredCurrentQuiz ? (
+                            <>
+                              <CheckCircle className="w-6 h-6 mr-3 text-neon-green" />
+                              ALREADY ANSWERED! ✅
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="w-6 h-6 mr-3" />
+                              SUBMIT ANSWER! ⚡
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <div className="text-center mt-4 p-3 bg-neon-purple/10 rounded-lg border border-neon-purple/30">
+                        <div className="text-lg font-bold text-neon-yellow">
+                          💎 REWARD: {currentQuiz.reward} PREDICT TOKENS
+                        </div>
+                        <div className="text-sm text-neon-cyan mt-2">
+                          ⏰ Expires: {new Date(currentQuiz.deadline * 1000).toLocaleString()}
+                        </div>
+                        {hasAnsweredCurrentQuiz && (
+                          <div className="text-sm text-neon-green mt-2 font-bold">
+                            ✅ You have already submitted an answer for this quiz
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Brain className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-lg text-muted-foreground">
+                        No active quiz available at the moment. 
+                        <br />
+                        Check back later for more brain teasers! 🧠
+                      </p>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </CardContent>

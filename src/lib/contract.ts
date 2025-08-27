@@ -9,7 +9,7 @@ export const FLOW_TESTNET = {
     symbol: 'FLOW',
     decimals: 18,
   },
-  rpcUrls: ['https://testnet.evm.nodes.onflow.org'],
+  rpcUrls: ['https://flow-testnet.g.alchemy.com/v2/UqKqNAsvnMX2rMo6KIJHi'],
   blockExplorerUrls: ['https://evm-testnet.flowscan.io'],
 };
 
@@ -226,6 +226,19 @@ export const CONTRACT_ABI = [
     "inputs": [],
     "name": "quizCounter", 
     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "name": "quizzes",
+    "outputs": [
+      {"internalType": "string", "name": "question", "type": "string"},
+      {"internalType": "bytes32", "name": "answerHash", "type": "bytes32"},
+      {"internalType": "uint256", "name": "reward", "type": "uint256"},
+      {"internalType": "uint256", "name": "deadline", "type": "uint256"},
+      {"internalType": "bool", "name": "active", "type": "bool"}
+    ],
     "stateMutability": "view",
     "type": "function"
   },

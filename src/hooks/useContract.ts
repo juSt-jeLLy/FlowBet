@@ -4,6 +4,14 @@ import { useWeb3 } from '@/contexts/Web3Context';
 import { toast } from '@/hooks/use-toast';
 import { addUserActivity, updateLeaderboard, updateMarketStats } from '@/lib/supabase';
 
+export interface Quiz {
+  question: string;
+  answerHash: string;
+  reward: bigint;
+  deadline: number;
+  active: boolean;
+}
+
 export interface Market {
   id: number;
   question: string;
@@ -480,6 +488,73 @@ export function useContract() {
     }
   }, [contract, account]);
 
+  // Get quiz details
+  const getQuiz = useCallback(async (quizId: number) => {
+    if (!contract) return null;
+
+    try {
+      const quiz = await contract.quizzes(quizId);
+      if (!quiz || !quiz.question) return null;
+      
+      return {
+        question: quiz.question,
+        answerHash: quiz.answerHash,
+        reward: quiz.reward,
+        deadline: Number(quiz.deadline),
+        active: quiz.active
+      } as Quiz;
+    } catch (error) {
+      console.error('Error fetching quiz:', error);
+      return null;
+    }
+  }, [contract]);
+
+  // Create a quiz (owner only)
+  const createQuiz = useCallback(async (
+    question: string,
+    answer: string,
+    reward: string,
+    deadline: number
+  ) => {
+    if (!contract || !account) return;
+
+    setLoading(true);
+    try {
+      const answerHash = ethers.keccak256(ethers.toUtf8Bytes(answer));
+      const tx = await contract.createQuiz(
+        question,
+        answerHash,
+        ethers.parseEther(reward),
+        deadline
+      );
+      
+      toast({
+        title: "Creating Quiz! 🧠",
+        description: "Creating new brain teaser...",
+      });
+
+      const receipt = await tx.wait();
+      
+      toast({
+        title: "Quiz Created! 📚",
+        description: `Successfully created a new quiz!`,
+      });
+
+      return true;
+
+    } catch (error: any) {
+      console.error('Create quiz error:', error);
+      toast({
+        title: "Quiz Creation Failed",
+        description: error.reason || error.message || "Only owner can create quizzes",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [contract, account]);
+
   return {
     loading,
     deposit,
@@ -494,5 +569,8 @@ export function useContract() {
     canClaimDaily,
     getPayoutQuote,
     resolveMarket,
+    createQuiz,
+    getQuiz,
+    contract, // Expose contract instance for direct calls
   };
 }

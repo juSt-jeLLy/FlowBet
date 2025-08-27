@@ -39,6 +39,7 @@ const Dashboard = () => {
     withdraw,
     placeBet,
     createMarket,
+    createQuiz,
     resolveMarket,
     loading 
   } = useContract();
@@ -55,6 +56,12 @@ const Dashboard = () => {
   // Market creation state (only for owner)
   const [newMarketQuestion, setNewMarketQuestion] = useState("");
   const [newMarketDays, setNewMarketDays] = useState("7");
+  
+  // Quiz creation state
+  const [newQuizQuestion, setNewQuizQuestion] = useState("");
+  const [newQuizAnswer, setNewQuizAnswer] = useState("");
+  const [newQuizReward, setNewQuizReward] = useState("100");
+  const [newQuizDays, setNewQuizDays] = useState("1");
 
   useEffect(() => {
     if (isConnected && account) {
@@ -545,6 +552,87 @@ const Dashboard = () => {
                         <Plus className="w-4 h-4 mr-2" />
                       )}
                       Create Market
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Create Quiz Card */}
+                <Card className="neon-border-purple bg-dark-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-neon-purple" />
+                      Create New Quiz
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Quiz Question</label>
+                      <Input
+                        placeholder="e.g., What cryptocurrency was first to implement smart contracts?"
+                        value={newQuizQuestion}
+                        onChange={(e) => setNewQuizQuestion(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Correct Answer</label>
+                      <Input
+                        placeholder="The answer that players need to match exactly"
+                        value={newQuizAnswer}
+                        onChange={(e) => setNewQuizAnswer(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Reward Amount</label>
+                        <Input
+                          type="number"
+                          placeholder="100"
+                          value={newQuizReward}
+                          onChange={(e) => setNewQuizReward(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Duration (Days)</label>
+                        <Input
+                          type="number"
+                          placeholder="1"
+                          value={newQuizDays}
+                          onChange={(e) => setNewQuizDays(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={async () => {
+                        if (!newQuizQuestion.trim() || !newQuizAnswer.trim()) return;
+                        
+                        const deadline = Math.floor(Date.now() / 1000) + (parseInt(newQuizDays) * 24 * 60 * 60);
+                        await createQuiz(
+                          newQuizQuestion,
+                          newQuizAnswer,
+                          newQuizReward,
+                          deadline
+                        );
+                        
+                        // Reset form
+                        setNewQuizQuestion("");
+                        setNewQuizAnswer("");
+                        setNewQuizReward("100");
+                        setNewQuizDays("1");
+                      }}
+                      disabled={loading || !newQuizQuestion.trim() || !newQuizAnswer.trim()}
+                      variant="hero"
+                      className="w-full bg-neon-purple/20 hover:bg-neon-purple/30 text-neon-purple"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Brain className="w-4 h-4 mr-2" />
+                      )}
+                      Create Quiz
                     </Button>
                   </CardContent>
                 </Card>
