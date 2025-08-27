@@ -7,13 +7,13 @@ import { Web3Provider } from "@/contexts/Web3Context";
 import { SoundProvider } from "@/components/SoundSystem";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { Navigation } from "@/components/Navigation";
-import Index from "./pages/Index";
+import Index from "./pages/index";
 import Markets from "./pages/Markets";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import Rewards from "./pages/Rewards";
 import Wallet from "./pages/Wallet";
 import NotFound from "./pages/NotFound";
-import Home from "./pages/Home";
+import Home from "./pages/home";
 const queryClient = new QueryClient();
 
 const App = () => (
