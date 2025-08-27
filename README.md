@@ -25,12 +25,40 @@ Create markets, place epic bets, earn daily rewards, solve mind-bending puzzles,
 * 📈 **Protocol Fees:** 2% withdrawal tax keeps the ecosystem thriving
 * 🎁 **Staking Rewards:** Earn through multiple engagement vectors
 
+#### **🎰 Pari-Mutuel Betting System**
+FlowBet uses a **dynamic pari-mutuel system** where odds change with every bet:
+
+- **Pool-Based Betting:** All bets go into outcome-specific pools (YES/NO for binary markets)
+- **Dynamic Odds:** Your potential payout = `(Your Bet × Total Pool After Fees) / Winning Pool Size`
+- **Real-Time Updates:** Odds shift instantly as more users bet, creating strategic timing opportunities
+- **Winner Takes All:** Winners split the entire losing side's pool proportionally to their bets
+
+**Example:** If the YES pool has 1000 PREDICT and NO pool has 500 PREDICT, and you bet 100 PREDICT on YES:
+- Total Pool: 1500 PREDICT
+- After 2% protocol fee: 1470 PREDICT available for winners
+- If YES wins: Your payout = `(100 × 1470) / 1000 = 147 PREDICT`
+- **You just made 47% profit!** 💰
+
 ### 🎮 **Gamification System (The Sauce)**
 * 🗓️ **Daily Login Rewards:** Free tokens every 24 hours (don't break the chain!)
-* 🔥 **Streak Multipliers:** 1.0x → 1.5x based on your commitment level
+* 🔥 **Streak Multipliers:** Progressive rewards that scale with commitment
 * 🧠 **Brain Teasers:** IQ-testing puzzles for bonus token drops
 * 🏆 **Achievement System:** Common → Legendary status unlocks
 * 📊 **Leaderboards:** Compete for digital supremacy and bragging rights
+
+#### **🎁 Daily Reward Distribution System**
+Smart streak-based rewards that reward consistency:
+
+- **Base Reward:** 100 PREDICT tokens per day
+- **Streak Multipliers:**
+  - Days 1-6: **1.0x** (100 PREDICT)
+  - Days 7-13: **1.1x** (110 PREDICT) 
+  - Days 14-29: **1.25x** (125 PREDICT)
+  - Days 30+: **1.5x** (150 PREDICT)
+- **Reset Mechanism:** Miss more than 48 hours = streak resets to Day 1
+- **24-Hour Cooldown:** Prevents reward farming and spam
+
+**Pro Strategy:** Maximum earners get 1,095 extra PREDICT tokens per month at max streak! 📈
 
 ### 🎨 **UI/UX That Goes Hard**
 * 🌃 **Cyberpunk Aesthetic:** Neon-soaked interface with particle effects
@@ -242,7 +270,39 @@ CREATE TABLE market_stats (
 
 ---
 
-## 🎮 **How to Dominate FlowBet (User Guide)**
+## 🎯 **Advanced Betting Mechanics**
+
+### **📊 How Odds Change With Every Bet**
+
+FlowBet's **pari-mutuel system** creates a dynamic, fair betting environment:
+
+#### **🔄 Real-Time Odds Calculation**
+```
+Potential Payout = (Your Bet × Net Total Pool) / Final Winning Pool Size
+
+Where:
+- Net Total Pool = Total Pool - 2% Protocol Fee
+- Final Winning Pool = All bets on winning outcome
+```
+
+#### **💡 Strategic Betting Examples**
+
+**Scenario 1: Early Bird Advantage**
+- Market: "Will Bitcoin hit $100k by end of year?"
+- Current state: YES: 100 PREDICT, NO: 50 PREDICT
+- You bet 50 PREDICT on NO
+- If NO wins, you get: `(50 × 147) / 100 = 73.5 PREDICT` **(47% profit)**
+
+**Scenario 2: Contrarian Play** 
+- Same market after more bets: YES: 1000 PREDICT, NO: 200 PREDICT
+- You bet 100 PREDICT on NO (now the underdog)
+- If NO wins, you get: `(100 × 1176) / 300 = 392 PREDICT` **(292% profit!)**
+
+#### **⚡ Why This System Is Genius**
+- **No House Edge:** Users bet against each other, not the house
+- **Market Discovery:** Odds reflect true community sentiment
+- **Strategic Depth:** Timing and contrarian thinking can yield massive returns
+- **Fair Distribution:** Larger bets get proportionally larger payouts
 
 ### **1. 🔌 Connect Your Wallet**
 - Click the **"Connect Wallet"** button in the top right
