@@ -28,7 +28,7 @@ import type { Market, UserStats } from "@/hooks/useContract";
 import { OWNER_ADDRESS } from "@/lib/contract";
 import { Link } from "react-router-dom";
 
-const Index = () => {
+const Dashboard = () => {
   const { isConnected, account, flowBalance, predictBalance } = useWeb3();
   const { 
     getUserStats, 
@@ -668,4 +668,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Dashboard;

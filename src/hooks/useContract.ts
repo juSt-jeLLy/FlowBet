@@ -437,6 +437,49 @@ export function useContract() {
     }
   }, [contract]);
 
+  // Resolve a market (owner only)
+  const resolveMarket = useCallback(async (marketId: number, winningOutcome: number) => {
+    if (!contract || !account) return;
+
+    setLoading(true);
+    try {
+      const tx = await contract.resolveMarket(marketId, winningOutcome);
+      
+      toast({
+        title: "Resolving Market! 🎯",
+        description: "Setting the market outcome...",
+      });
+
+      await tx.wait();
+
+      // Log activity
+      await addUserActivity({
+        wallet_address: account,
+        activity_type: 'resolve_market',
+        description: `Resolved market #${marketId} with outcome: ${winningOutcome === 1 ? 'YES' : 'NO'}`,
+        market_id: marketId,
+        transaction_hash: tx.hash,
+      });
+
+      toast({
+        title: "Market Resolved! 🎉",
+        description: `Successfully resolved market #${marketId}`,
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('Resolve market error:', error);
+      toast({
+        title: "Market Resolution Failed",
+        description: error.reason || error.message || "Only owner/oracle can resolve markets",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [contract, account]);
+
   return {
     loading,
     deposit,
@@ -450,5 +493,6 @@ export function useContract() {
     getUserStats,
     canClaimDaily,
     getPayoutQuote,
+    resolveMarket,
   };
 }

@@ -7,7 +7,7 @@ import { Web3Provider } from "@/contexts/Web3Context";
 import { SoundProvider } from "@/components/SoundSystem";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { Navigation } from "@/components/Navigation";
-import Index from "./pages/index";
+import Dashboard from "./pages/Dashboard";
 import Markets from "./pages/Markets";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import Rewards from "./pages/Rewards";
@@ -30,7 +30,7 @@ const App = () => (
                 <Navigation />
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/dashboard" element={<Index />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/markets" element={<Markets />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/rewards" element={<Rewards />} />
