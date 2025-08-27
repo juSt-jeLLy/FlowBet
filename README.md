@@ -42,9 +42,19 @@ FlowBet uses a **dynamic pari-mutuel system** where odds change with every bet:
 ### 🎮 **Gamification System (The Sauce)**
 * 🗓️ **Daily Login Rewards:** Free tokens every 24 hours (don't break the chain!)
 * 🔥 **Streak Multipliers:** Progressive rewards that scale with commitment
-* 🧠 **Brain Teasers:** IQ-testing puzzles for bonus token drops
 * 🏆 **Achievement System:** Common → Legendary status unlocks
 * 📊 **Leaderboards:** Compete for digital supremacy and bragging rights
+  
+* 📝 Quiz Mechanics
+🧠 Daily Brain Teaser: New puzzle available every 24 hours
+
+⏰ 24-Hour Availability: Each quiz remains active for exactly 24 hours
+
+🎯 One Attempt Per Quiz: Choose your answer carefully!
+
+💰 Token Rewards: Correct answers earn bonus PREDICT tokens
+
+📈 Streak Multipliers: Consecutive correct answers increase your rewards
 
 #### **🎁 Daily Reward Distribution System**
 Smart streak-based rewards that reward consistency:
