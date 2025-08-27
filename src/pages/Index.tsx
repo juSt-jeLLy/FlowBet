@@ -202,60 +202,7 @@ const Index = () => {
           <ConnectWallet />
         </div>
 
-        {/* Project Overview Section */}
-        <motion.div 
-          className="bg-gradient-matrix p-6 rounded-xl neon-border-green"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="grid md:grid-cols-2 gap-6 items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-neon-green mb-3 text-glow">
-                🎯 About FlowBet
-              </h2>
-              <p className="text-foreground mb-4">
-                The ultimate gamified prediction market on Flow EVM! Bet on crypto outcomes, 
-                earn daily rewards, and climb the leaderboards. Your knowledge = your profit!
-              </p>
-              <div className="flex gap-4">
-                <Link to="/markets">
-                  <Button variant="hero" className="cyber-shake">
-                    <Target className="w-4 h-4 mr-2" />
-                    Browse Markets
-                  </Button>
-                </Link>
-                <Link to="/leaderboard">
-                  <Button variant="secondary" className="pulse-glow">
-                    <Trophy className="w-4 h-4 mr-2" />
-                    Leaderboard
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "Active Markets", value: markets.filter(m => !m.isResolved).length, icon: Target, color: "neon-cyan" },
-                { label: "Total Volume", value: `${markets.reduce((acc, m) => acc + Number(m.totalPool), 0).toFixed(0)}`, icon: TrendingUp, color: "neon-green" },
-                { label: "Players", value: "1.2K+", icon: Users, color: "neon-pink" },
-                { label: "Rewards Paid", value: "5.8K", icon: Gift, color: "neon-orange" }
-              ].map((stat, i) => (
-                <motion.div 
-                  key={i}
-                  className="bg-dark-card/80 p-3 rounded-lg text-center neon-border"
-                  whileHover={{ scale: 1.05 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * i }}
-                >
-                  <stat.icon className={`w-5 h-5 mx-auto mb-1 text-${stat.color}`} />
-                  <div className={`text-lg font-bold text-${stat.color}`}>{stat.value}</div>
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+       
 
         {/* Recent Hot Markets */}
         {markets.length > 0 && (

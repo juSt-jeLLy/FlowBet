@@ -13,7 +13,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import Rewards from "./pages/Rewards";
 import Wallet from "./pages/Wallet";
 import NotFound from "./pages/NotFound";
-
+import Home from "./pages/Home";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -29,7 +29,8 @@ const App = () => (
               <div className="relative z-10">
                 <Navigation />
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="/dashboard" element={<Index />} />
                   <Route path="/markets" element={<Markets />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/rewards" element={<Rewards />} />

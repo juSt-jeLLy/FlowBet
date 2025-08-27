@@ -18,6 +18,7 @@ import { useSound } from '@/components/SoundSystem';
 
 const navItems = [
   { path: '/', label: 'Home', icon: Home },
+  { path: '/dashboard', label: 'Dashboard', icon: TrendingUp },
   { path: '/markets', label: 'Markets', icon: Target },
   { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { path: '/rewards', label: 'Rewards', icon: Gift },
