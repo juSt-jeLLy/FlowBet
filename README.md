@@ -10,7 +10,7 @@ Create markets, place epic bets, earn daily rewards, solve mind-bending puzzles,
 
 📍 **Contract Address:** `0x2D8C5F975394AC57Db7810bb09f58e39099c74a5`
 
-📍 **Contract:** `https://github.com/juSt-jeLLy/FlowBet/blob/main/contract/FlowBet.sol`
+📍 **Contract:** https://github.com/juSt-jeLLy/FlowBet/blob/main/contract/FlowBet.sol
 
 ---
 
