@@ -6,7 +6,10 @@ Create markets, place epic bets, earn daily rewards, solve mind-bending puzzles,
 
 ## 🔗 **Live Contract on Flow EVM Testnet**
 
-🔴 **View real-time transactions:** https://evm-testnet.flowscan.io/address/0x2D8C5F975394AC57Db7810bb09f58e39099c74a5?tab=txs
+🔴 **View real-time transactions:** 
+https://evm-testnet.flowscan.io/token/0x2D8C5F975394AC57Db7810bb09f58e39099c74a5
+
+https://evm-testnet.flowscan.io/address/0x2D8C5F975394AC57Db7810bb09f58e39099c74a5?tab=txs
 
 📍 **Contract Address:** `0x2D8C5F975394AC57Db7810bb09f58e39099c74a5`
 
